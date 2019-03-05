@@ -8,9 +8,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import static org.donntu.android.lab2.backend.utils.StringUtils.stringToDefaultFormat;
 
@@ -35,14 +37,23 @@ public class WordService {
         }
 
         NextWordResponse nextWordResponse = new NextWordResponse();
-        int rightAnswerIndex = random.nextInt(words.size());
+        nextWordResponse.setRightAnswerIndex(random.nextInt(maxRightAnswersCount));
+        List<Integer> wordsIndexes = new ArrayList<>();
         for (int i = 0; i < answerVersionsCount; i++) {
-            if (i == rightAnswerIndex) {
-                nextWordResponse.setRightAnswerIndex(i);
-            }
-            nextWordResponse.getAnswerVersions().add(Word.of(words.get(i)));
+            Integer index;
+            do {
+                index = random.nextInt(words.size());
+            } while (wordsIndexes.contains(index));
+            wordsIndexes.add(index);
         }
 
+        List<Word> responseWords =
+                wordsIndexes
+                        .stream()
+                        .map(index -> Word.of(words.get(index)))
+                        .collect(Collectors.toList());
+
+        nextWordResponse.setAnswerVersions(responseWords);
         return nextWordResponse;
     }
 
@@ -50,7 +61,7 @@ public class WordService {
         Optional<WordEntity> byId = repository.findById(wordId);
         byId.ifPresent(word -> {
             word.incRightAnswerCount();
-            if(word.getRightAnswerCount() >= maxRightAnswersCount) {
+            if (word.getRightAnswerCount() >= maxRightAnswersCount) {
                 word.setInArchive(true);
             }
             repository.save(word);
@@ -65,13 +76,12 @@ public class WordService {
                         russianTranslate,
                         englishTranslate
                 );
-        if(wordEntity.isPresent()) {
+        if (wordEntity.isPresent()) {
             throw new Exception("Такое слово уже существует");
         } else {
             repository.save(new WordEntity(russianTranslate, englishTranslate));
         }
     }
-
 
 
 }

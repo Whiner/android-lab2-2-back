@@ -7,7 +7,6 @@ import org.donntu.android.lab2.backend.service.WordService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api")
 @RequiredArgsConstructor
 public class WordController {
     private final WordService service;
