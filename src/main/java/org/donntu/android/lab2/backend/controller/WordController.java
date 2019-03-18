@@ -39,4 +39,8 @@ public class WordController {
         return service.getAllWords();
     }
 
+    @PostMapping("/refresh")
+    public void refreshArchive() {
+        service.refreshArchive();
+    }
 }

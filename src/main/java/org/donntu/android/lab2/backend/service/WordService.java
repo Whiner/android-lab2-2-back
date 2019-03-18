@@ -97,4 +97,12 @@ public class WordService {
         repository.findAll().forEach(entity -> words.add(FullWordInfo.of(entity)));
         return words;
     }
+
+    @Transactional(rollbackFor = Exception.class)
+    public void refreshArchive() {
+        repository.findAll().forEach(entity -> {
+            entity.setInArchive(false);
+            entity.setRightAnswerCount(0);
+        });
+    }
 }
