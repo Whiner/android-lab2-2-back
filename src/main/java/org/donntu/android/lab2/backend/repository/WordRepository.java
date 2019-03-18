@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface WordRepository extends CrudRepository<WordEntity, Long> {
     List<WordEntity> findAllByInArchiveIs(boolean isInArchive);
 
+    Integer countAllByInArchive(boolean isInArchive);
+
     Optional<WordEntity> findByRussianTranslateOrEnglishTranslate(
             String russianTranslate,
             String englishTranslate

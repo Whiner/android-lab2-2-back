@@ -1,5 +1,6 @@
 package org.donntu.android.lab2.backend.service;
 
+import org.donntu.android.lab2.backend.dto.FullWordInfo;
 import org.donntu.android.lab2.backend.dto.NextWordResponse;
 import org.donntu.android.lab2.backend.dto.Word;
 import org.donntu.android.lab2.backend.entity.WordEntity;
@@ -7,6 +8,7 @@ import org.donntu.android.lab2.backend.repository.WordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,20 +70,31 @@ public class WordService {
         });
     }
 
-    public void addWord(Word word) throws Exception {
-        String russianTranslate = stringToDefaultFormat(word.getRussian());
-        String englishTranslate = stringToDefaultFormat(word.getEnglish());
-        Optional<WordEntity> wordEntity = repository
-                .findByRussianTranslateOrEnglishTranslate(
-                        russianTranslate,
-                        englishTranslate
-                );
-        if (wordEntity.isPresent()) {
-            throw new Exception("Такое слово уже существует");
-        } else {
-            repository.save(new WordEntity(russianTranslate, englishTranslate));
-        }
+    @Transactional(rollbackFor = Exception.class)
+    public void addWords(List<Word> words) {
+        words.forEach(word -> {
+            String russianTranslate = stringToDefaultFormat(word.getRussian());
+            String englishTranslate = stringToDefaultFormat(word.getEnglish());
+            Optional<WordEntity> wordEntity = repository
+                    .findByRussianTranslateOrEnglishTranslate(
+                            russianTranslate,
+                            englishTranslate
+                    );
+            if (!wordEntity.isPresent()) {
+                repository.save(new WordEntity(russianTranslate, englishTranslate));
+            }
+        });
+
     }
 
 
+    public Integer getAvailableWordsCount() {
+        return repository.countAllByInArchive(false);
+    }
+
+    public List<FullWordInfo> getAllWords() {
+        List<FullWordInfo> words = new ArrayList<>();
+        repository.findAll().forEach(entity -> words.add(FullWordInfo.of(entity)));
+        return words;
+    }
 }
